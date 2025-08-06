@@ -18,102 +18,101 @@ import SettingPage from "./Settings";
 
 const ChannelMessages = findByProps("_channelMessages");
 
-export const regexEscaper = string => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+export const regexEscaper = string => string.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&');
 export const stripVersions = (str) => str.replace(/\s?v\d+.\d+.\w+/, "");
-export const vendettaUiAssets = Object.keys(Assets.all).map(x => x?.name)
 
+export const vendettaUiAssets = Object.keys(Assets.all || {}).map(key => Assets.all[key]?.name || key);
 
 makeDefaults(storage, {
-	setting: {
-		colorpick: false,
-		customize: false,
-		ingorelist: false,
-		patches: false,
-		text: false,
-		timestamp: false,
-	},
-	switches: {
-		customizeable: false,
-		enableMD: true,
-		enableMU: true,
-		useBackgroundColor: false,
-		useSemRawColors: false,
-		ignoreBots: false,
-		minimalistic: true,
-		alwaysAdd: false,
-		darkMode: true,
-		removeDismissButton: false,
-		addTimestampForEdits: false,
-		timestampStyle: 'R',
-		useEphemeralForDeleted: true,
-		overrideIndicator: false,
-		useIndicatorForDeleted: false
-	},
-	colors: {
-		textColor: "#E40303",
-		backgroundColor: "#FF2C2F",
-		backgroundColorAlpha: "33",
-		gutterColor: "#FF2C2F",
-		gutterColorAlpha: "CC",
-		semRawColorPrefix: "semanticColors.TEXT_BRAND",
-	},
-	inputs: {
-		deletedMessageBuffer: "This message is deleted",
-		editedMessageBuffer: "`[ EDITED ]`",
-		historyToast: "[ANTI ED] History Removed",
-		ignoredUserList: [],
-		customPluginName: (plugin?.manifest?.name || "ANTIED"),
-		customIndicator: ""
-	},
-	misc: {
-		timestampPos: "BEFORE", // BEFORE|AFTER
-		editHistoryIcon: "ic_edit_24px"
-	},
-	debug: false,
-	debugUpdateRows: false
-})
+    setting: {
+        colorpick: false,
+        customize: false,
+        ingorelist: false,
+        patches: false,
+        text: false,
+        timestamp: false,
+    },
+    switches: {
+        customizeable: false,
+        enableMD: true,
+        enableMU: true,
+        useBackgroundColor: false,
+        useSemRawColors: false,
+        ignoreBots: false,
+        minimalistic: true,
+        alwaysAdd: false,
+        darkMode: true,
+        removeDismissButton: false,
+        addTimestampForEdits: false,
+        timestampStyle: 'R',
+        useEphemeralForDeleted: true,
+        overrideIndicator: false,
+        useIndicatorForDeleted: false
+    },
+    colors: {
+        textColor: "#E40303",
+        backgroundColor: "#FF2C2F",
+        backgroundColorAlpha: "33",
+        gutterColor: "#FF2C2F",
+        gutterColorAlpha: "CC",
+        semRawColorPrefix: "semanticColors.TEXT_BRAND",
+    },
+    inputs: {
+        deletedMessageBuffer: "This message is deleted",
+        editedMessageBuffer: "`[ EDITED ]`",
+        historyToast: "[ANTI ED] History Removed",
+        ignoredUserList: [],
+        customPluginName: (plugin?.manifest?.name || "ANTIED"),
+        customIndicator: ""
+    },
+    misc: {
+        timestampPos: "BEFORE", // BEFORE|AFTER
+        editHistoryIcon: "ic_edit_24px"
+    },
+    debug: false,
+    debugUpdateRows: false
+});
 
 let deletedMessageArray = {};
-const patches = []
+const patches = [];
 
 export default {
-	onLoad: () => {
-		patches.push(
-			fluxDispatchPatch(deletedMessageArray),
-			updateRowsPatch(deletedMessageArray),
-			selfEditPatch(),
-			createMessageRecord(),
-			messageRecordDefault(),
-			updateMessageRecord(),
-			actionsheet(deletedMessageArray)	
-		)
-		
-		if(plugin?.manifest?.name != storage?.inputs?.customPluginName) {
-			plugin.manifest.name = storage?.inputs?.customPluginName
-		}
-	},
-	onUnload: () => {
+    onLoad: () => {
+        patches.push(
+            fluxDispatchPatch(deletedMessageArray),
+            updateRowsPatch(deletedMessageArray),
+            selfEditPatch(),
+            createMessageRecord(),
+            messageRecordDefault(),
+            updateMessageRecord(),
+            actionsheet(deletedMessageArray)
+        );
         
+        if (plugin?.manifest?.name !== storage?.inputs?.customPluginName) {
+            plugin.manifest.name = storage?.inputs?.customPluginName;
+        }
+    },
+    onUnload: () => {
         for (const unpatch of patches) {
             unpatch();
         }
 
-		if(plugin?.manifest?.name != storage?.inputs?.customPluginName) {
-			plugin.manifest.name = storage?.inputs?.customPluginName
-		}
+        if (plugin?.manifest?.name !== storage?.inputs?.customPluginName) {
+            plugin.manifest.name = storage?.inputs?.customPluginName;
+        }
 
-		for (const channelId in ChannelMessages._channelMessages) {
-			for (const message of ChannelMessages._channelMessages[channelId]._array) {
-				if(message.was_deleted) {
-					FluxDispatcher.dispatch({
-						type: "MESSAGE_DELETE",
-						id: message.id,
-						channelId: message.channel_id,
-						otherPluginBypass: true,
-					});
-				}
-			}
-		}
-	},
-	settings: SettingPage
-}
+        for (const channelId in ChannelMessages._channelMessages) {
+            for (const message of ChannelMessages._channelMessages[channelId]._array) {
+                if (message.was_deleted) {
+                    FluxDispatcher.dispatch({
+                        type: "MESSAGE_DELETE",
+                        id: message.id,
+                        channelId: message.channel_id,
+                        otherPluginBypass: true,
+                    });
+                }
+            }
+        }
+    },
+    settings: SettingPage
+};
